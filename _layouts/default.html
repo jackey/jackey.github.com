@@ -1,7 +1,13 @@
 {% include top.html %}
 
 <body>
-{{ content }}
+{% include nav.html %}
+
+{%include sidebar.html%}
+
+<div id="container">
+	{{ content }}
+</div>
 
 </body>
 </html>

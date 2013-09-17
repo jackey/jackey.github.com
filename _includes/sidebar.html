@@ -1,0 +1,15 @@
+<aside id="sidebar">
+	<div id="title_wrap" class="select1">
+		<h2 id="title1" class="title">最新文章</h2>
+		<h2 id="title2" class="title">MySQL 高性能和调优</h2>
+		<h2 id="title3" class="title">Zend Framework / PHP / Drupal 系</h2>
+		<h2 id="title4" class="title">系统设计与架构</h2>
+		<h2 id="title5" class="title">我的项目</h2>
+		<h2 id="title6" class="title">Github</h2>
+	</div>
+	<div id="post_list">
+		{% for post in site.posts %}
+			<a class="cate1" href="{{ post.url }}"><span class="circle_icon"></span>{{post.title}}<span class="date">{{ post.date | date_to_string }}</span></a>
+		{% endfor%}
+	</div>
+</aside>
