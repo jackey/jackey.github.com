@@ -45,11 +45,11 @@
 <div id="container">
 	<h3 id='mysql_io'>MySQL 性能分析&#8211;监控系统IO状态</h3>
 
-<h4 id='id400'>背景</h4>
+<h4 id='id460'>背景</h4>
 
 <p>我经常看到很多博客写了关于iostat 监控IO的事情，不仅列出了数据还分析数据所包含的意义。但是我自己心里始终有些疑问：自己是没有见过高并发的小同学，如何知道在各种高并发情况下IO状态呢, 所以我通过写下这个博客来让自己学会一步一步的模拟一个高并发的场景.</p>
 
-<h4 id='id401'>用到的工具</h4>
+<h4 id='id461'>用到的工具</h4>
 
 <ul>
 <li>
@@ -59,33 +59,36 @@
 </li>
 
 <li>
-<p>MySQL 涉及到磁盘IO的状态变量 * 测试脚本</p>
+<p>MySQL 涉及到磁盘IO的状态变量</p>
+</li>
+
+<li>
+<p>Python 测试脚本</p>
 
 <p>我这里主要用到了python脚本对数据库重复写数据和读数据操作来观察IO状态变化</p>
 </li>
 </ul>
 
 <h4 id='___test_io_node_drupal_cms_'>第一步，建立一个数据库 和 测试表 (数据库就叫test_io， 表叫node, 是来自drupal CMS, 我简化了下)</h4>
-
-<p><code>create database test_io default charset utf8 collate utf8_general_ci;
-CREATE TABLE `node` (
-    `nid` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT &#39;The primary identifier for a node.&#39;,
-    `type` varchar(32) NOT NULL DEFAULT &#39;&#39; COMMENT &#39;The node_type.type of this node.&#39;,
-    `title` varchar(255) NOT NULL DEFAULT &#39;&#39; COMMENT &#39;The title of this node, always treated as non-markup plain text.&#39;,
-    `uid` int(11) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;The users.uid that owns this node; initially, this is the user that created it.&#39;,
-    `status` int(11) NOT NULL DEFAULT &#39;1&#39; COMMENT &#39;Boolean indicating whether the node is published (visible to non-administrators).&#39;,
-    `created` int(11) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;The Unix timestamp when the node was created.&#39;,
-    `changed` int(11) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;The Unix timestamp when the node was most recently saved.&#39;,
-    PRIMARY KEY (`nid`),
-    KEY `node_changed` (`changed`),
-    KEY `node_created` (`created`),
-    KEY `node_status_type` (`status`,`type`,`nid`),
-    KEY `node_title_type` (`title`,`type`(4)),
-    KEY `node_type` (`type`(4)),
-    KEY `uid` (`uid`)
-) ENGINE=InnoDB AUTO_INCREMENT=30674 DEFAULT CHARSET=utf8 COMMENT=&#39;The base table for nodes.</code></p>
-
-<h4 id='_python_50_'>第二步， 创建一个python小脚本, 主要模拟了50个并发。 查询参数和类型在控制台指定.</h4>
+<div class='highlight'><pre><code class='sql'><span class='k'>create</span> <span class='k'>database</span> <span class='n'>test_io</span> <span class='k'>default</span> <span class='n'>charset</span> <span class='n'>utf8</span> <span class='k'>collate</span> <span class='n'>utf8_general_ci</span><span class='p'>;</span>
+<span class='k'>CREATE</span> <span class='k'>TABLE</span> <span class='o'>`</span><span class='n'>node</span><span class='o'>`</span> <span class='p'>(</span>
+    <span class='o'>`</span><span class='n'>nid</span><span class='o'>`</span> <span class='nb'>int</span><span class='p'>(</span><span class='mi'>10</span><span class='p'>)</span> <span class='n'>unsigned</span> <span class='k'>NOT</span> <span class='k'>NULL</span> <span class='n'>AUTO_INCREMENT</span> <span class='k'>COMMENT</span> <span class='s1'>&#39;The primary identifier for a node.&#39;</span><span class='p'>,</span>
+    <span class='o'>`</span><span class='k'>type</span><span class='o'>`</span> <span class='nb'>varchar</span><span class='p'>(</span><span class='mi'>32</span><span class='p'>)</span> <span class='k'>NOT</span> <span class='k'>NULL</span> <span class='k'>DEFAULT</span> <span class='s1'>&#39;&#39;</span> <span class='k'>COMMENT</span> <span class='s1'>&#39;The node_type.type of this node.&#39;</span><span class='p'>,</span>
+    <span class='o'>`</span><span class='n'>title</span><span class='o'>`</span> <span class='nb'>varchar</span><span class='p'>(</span><span class='mi'>255</span><span class='p'>)</span> <span class='k'>NOT</span> <span class='k'>NULL</span> <span class='k'>DEFAULT</span> <span class='s1'>&#39;&#39;</span> <span class='k'>COMMENT</span> <span class='s1'>&#39;The title of this node, always treated as non-markup plain text.&#39;</span><span class='p'>,</span>
+    <span class='o'>`</span><span class='n'>uid</span><span class='o'>`</span> <span class='nb'>int</span><span class='p'>(</span><span class='mi'>11</span><span class='p'>)</span> <span class='k'>NOT</span> <span class='k'>NULL</span> <span class='k'>DEFAULT</span> <span class='s1'>&#39;0&#39;</span> <span class='k'>COMMENT</span> <span class='s1'>&#39;The users.uid that owns this node; initially, this is the user that created it.&#39;</span><span class='p'>,</span>
+    <span class='o'>`</span><span class='n'>status</span><span class='o'>`</span> <span class='nb'>int</span><span class='p'>(</span><span class='mi'>11</span><span class='p'>)</span> <span class='k'>NOT</span> <span class='k'>NULL</span> <span class='k'>DEFAULT</span> <span class='s1'>&#39;1&#39;</span> <span class='k'>COMMENT</span> <span class='s1'>&#39;Boolean indicating whether the node is published (visible to non-administrators).&#39;</span><span class='p'>,</span>
+    <span class='o'>`</span><span class='n'>created</span><span class='o'>`</span> <span class='nb'>int</span><span class='p'>(</span><span class='mi'>11</span><span class='p'>)</span> <span class='k'>NOT</span> <span class='k'>NULL</span> <span class='k'>DEFAULT</span> <span class='s1'>&#39;0&#39;</span> <span class='k'>COMMENT</span> <span class='s1'>&#39;The Unix timestamp when the node was created.&#39;</span><span class='p'>,</span>
+    <span class='o'>`</span><span class='n'>changed</span><span class='o'>`</span> <span class='nb'>int</span><span class='p'>(</span><span class='mi'>11</span><span class='p'>)</span> <span class='k'>NOT</span> <span class='k'>NULL</span> <span class='k'>DEFAULT</span> <span class='s1'>&#39;0&#39;</span> <span class='k'>COMMENT</span> <span class='s1'>&#39;The Unix timestamp when the node was most recently saved.&#39;</span><span class='p'>,</span>
+    <span class='k'>PRIMARY</span> <span class='k'>KEY</span> <span class='p'>(</span><span class='o'>`</span><span class='n'>nid</span><span class='o'>`</span><span class='p'>),</span>
+    <span class='k'>KEY</span> <span class='o'>`</span><span class='n'>node_changed</span><span class='o'>`</span> <span class='p'>(</span><span class='o'>`</span><span class='n'>changed</span><span class='o'>`</span><span class='p'>),</span>
+    <span class='k'>KEY</span> <span class='o'>`</span><span class='n'>node_created</span><span class='o'>`</span> <span class='p'>(</span><span class='o'>`</span><span class='n'>created</span><span class='o'>`</span><span class='p'>),</span>
+    <span class='k'>KEY</span> <span class='o'>`</span><span class='n'>node_status_type</span><span class='o'>`</span> <span class='p'>(</span><span class='o'>`</span><span class='n'>status</span><span class='o'>`</span><span class='p'>,</span><span class='o'>`</span><span class='k'>type</span><span class='o'>`</span><span class='p'>,</span><span class='o'>`</span><span class='n'>nid</span><span class='o'>`</span><span class='p'>),</span>
+    <span class='k'>KEY</span> <span class='o'>`</span><span class='n'>node_title_type</span><span class='o'>`</span> <span class='p'>(</span><span class='o'>`</span><span class='n'>title</span><span class='o'>`</span><span class='p'>,</span><span class='o'>`</span><span class='k'>type</span><span class='o'>`</span><span class='p'>(</span><span class='mi'>4</span><span class='p'>)),</span>
+    <span class='k'>KEY</span> <span class='o'>`</span><span class='n'>node_type</span><span class='o'>`</span> <span class='p'>(</span><span class='o'>`</span><span class='k'>type</span><span class='o'>`</span><span class='p'>(</span><span class='mi'>4</span><span class='p'>)),</span>
+    <span class='k'>KEY</span> <span class='o'>`</span><span class='n'>uid</span><span class='o'>`</span> <span class='p'>(</span><span class='o'>`</span><span class='n'>uid</span><span class='o'>`</span><span class='p'>)</span>
+<span class='p'>)</span> <span class='n'>ENGINE</span><span class='o'>=</span><span class='n'>InnoDB</span> <span class='n'>AUTO_INCREMENT</span><span class='o'>=</span><span class='mi'>30674</span> <span class='k'>DEFAULT</span> <span class='n'>CHARSET</span><span class='o'>=</span><span class='n'>utf8</span> <span class='k'>COMMENT</span><span class='o'>=</span><span class='err'>&#39;</span><span class='n'>The</span> <span class='n'>base</span> <span class='k'>table</span> <span class='k'>for</span> <span class='n'>nodes</span><span class='p'>.</span>
+</code></pre></div>
+<h4 id='_python_50_'>第二步， 创建一个python小脚本, 主要模拟了50个并发。 查询参数和类型在配置文件指定.</h4>
 
 <p><a href='https://github.com/jackey/MySQLTools' title='Jackey MySQL Tool'>脚本源代码</a></p>
 
@@ -121,7 +124,7 @@ CREATE TABLE `node` (
 
 <p>我发现在线程从5降低到1的过程中 %util和 await 值始终在高水平位，几乎是满载运行，这说明一个硬盘的完成IO请求效率不会随着用户的减少而得到提高； 我并没有在保持线程个数不变，减少插入语句来监控IO, 因为这样子做对磁盘没有意义，只要总查询数没有变化，那么磁盘IO瓶颈依然会在 所以我们需要减少IO次数，来着手来提高MySQL性能；并且很显然，从MySQL数据库角度去看, 如果要提高网站效率，我们必须让每个页面的SQL查询降低到最低（举一个反例，我们有时候利用JAVA的多线程特性，来跑一堆的SQL, 其实这样子不会让IO处理的更快，只会更慢）</p>
 
-<h4 id='id402'>后续</h4>
+<h4 id='id462'>后续</h4>
 
 <p>后面我要用这里用到的结论和工具，通过调节参数来优化MySQL的IO 性能.</p>
 </div>

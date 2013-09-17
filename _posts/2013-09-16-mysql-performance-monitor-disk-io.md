@@ -15,13 +15,15 @@ title: MySQL 性能分析--监控系统IO状态
     我这里主要用到了iostat.
 
 * MySQL 涉及到磁盘IO的状态变量
-* 测试脚本
+
+* Python 测试脚本
 
     我这里主要用到了python脚本对数据库重复写数据和读数据操作来观察IO状态变化
     
 #### 第一步，建立一个数据库 和 测试表 (数据库就叫test_io， 表叫node, 是来自drupal CMS, 我简化了下)
 
-``create database test_io default charset utf8 collate utf8_general_ci;
+{% highlight sql %}
+create database test_io default charset utf8 collate utf8_general_ci;
 CREATE TABLE `node` (
     `nid` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'The primary identifier for a node.',
     `type` varchar(32) NOT NULL DEFAULT '' COMMENT 'The node_type.type of this node.',
@@ -37,9 +39,10 @@ CREATE TABLE `node` (
     KEY `node_title_type` (`title`,`type`(4)),
     KEY `node_type` (`type`(4)),
     KEY `uid` (`uid`)
-) ENGINE=InnoDB AUTO_INCREMENT=30674 DEFAULT CHARSET=utf8 COMMENT='The base table for nodes.``
+) ENGINE=InnoDB AUTO_INCREMENT=30674 DEFAULT CHARSET=utf8 COMMENT='The base table for nodes.
+{% endhighlight %}
     
-#### 第二步， 创建一个python小脚本, 主要模拟了50个并发。 查询参数和类型在控制台指定.
+#### 第二步， 创建一个python小脚本, 主要模拟了50个并发。 查询参数和类型在配置文件指定.
 [脚本源代码](https://github.com/jackey/MySQLTools "Jackey MySQL Tool")
 
 `usage: ./bin/io_test`
