@@ -1,3 +1,0 @@
-jackey
-======
-Blog Repo 
