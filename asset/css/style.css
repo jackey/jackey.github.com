@@ -908,7 +908,7 @@ a#end_cc, a#twitter, a#weibo {
     display: none; }
 
   #container {
-    margin-left: 500px; } }
+    margin-left: 500px; overflow-x: auto; } }
 @media screen and (max-width: 1200px) {
   #container {
     margin-left: 0;
