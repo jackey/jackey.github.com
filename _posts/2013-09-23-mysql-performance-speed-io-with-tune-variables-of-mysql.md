@@ -100,11 +100,9 @@ count: 10000 (1万个插入SQL)
 ```
 测试结果:
 
-```
-Start Running at: 2013-09-23 15:14:39.606895
-Start Consume with name: Thread-1.
-Finished at: 2013-09-23 15:25:20.730606
-```
+	Start Running at: 2013-09-23 15:14:39.606895
+	Start Consume with name: Thread-1.
+	Finished at: 2013-09-23 15:25:20.730606
 
 可以看到一个用户执行1万个插入SQL,竟然需要15mins 41s (忽略毫秒). 这个是一个很严重的性能问题；我们现在要想优化它就要明白MySQL和Innodb做了哪些磁盘IO操作然后通过配置来减少IO操作.
 
@@ -134,26 +132,22 @@ Finished at: 2013-09-23 15:25:20.730606
 - innodb_log_file_size 
 
 我现在MySQL配置里面, 配置是这样子的:
-```
-innodb_flush_log_at_trx_commit=1 (每次事务提交都需要写入日志, [详情](http://dev.mysql.com/doc/refman/5.5/en/innodb-parameters.html#sysvar_innodb_flush_log_at_trx_commit))
-innodb_log_buffer_size=8388608 (近似8MB)
-innodb_log_file_size=5242880 (近似5MB)
-```
+
+    innodb_flush_log_at_trx_commit=1 (每次事务提交都需要写入日志, [详情](http://dev.mysql.com/doc/refman/5.5/en/innodb-parameters.html#sysvar_innodb_flush_log_at_trx_commit))
+    innodb_log_buffer_size=8388608 (近似8MB)
+    innodb_log_file_size=5242880 (近似5MB)
 
 很显然，innodb_flush_log_at_trx_commit是有优化的可能，因为每次都需要写入日志文件是一个很大的IO开销, 我设置为0，意思是每隔1s写入日志文件.
-```
-innodb_flush_log_at_trx_commit=0
-innodb_log_buffer_size=8388608
-innodb_log_file_size=5242880
-```
+
+    innodb_flush_log_at_trx_commit=0
+    innodb_log_buffer_size=8388608
+    innodb_log_file_size=5242880
 
 其他变量保持不变。重启MySQL然后用同样的测试变量测试一遍,结果如下:
 
-```
-Start Running at: 2013-09-23 16:05:19.719965 
-Start Consume with name: Thread-1.
-Finished at: 2013-09-23 16:05:40.266169 
-```
+    Start Running at: 2013-09-23 16:05:19.719965 
+    Start Consume with name: Thread-1.
+    Finished at: 2013-09-23 16:05:40.266169 
 
 天啦，只花了21s, 提升了将近44.8倍的效率！ 不过设置为0的负作用是有的，因为不是实时的写入事务日志，所以不算严格意义上的ACID,所以如果发生crash事件（包括innodb 引擎的crash）会丢失最后1s的数据. 
 
@@ -161,19 +155,15 @@ Finished at: 2013-09-23 16:05:40.266169
 
 下面是我修改后的配置:
 
-```
-innodb_flush_log_at_trx_commit=0
-innodb_log_buffer_size=8388608
-innodb_log_file_size=134217728
-```
+    innodb_flush_log_at_trx_commit=0
+    innodb_log_buffer_size=8388608
+    innodb_log_file_size=134217728
 
 下面的是测试结果:
 
-```
-Start Running at: 2013-09-23 16:31:15.607059 
-Start Consume with name: Thread-1.
-Finished at: 2013-09-23 16:31:22.692315
-```
+    Start Running at: 2013-09-23 16:31:15.607059 
+    Start Consume with name: Thread-1.
+    Finished at: 2013-09-23 16:31:22.692315
 
 可以看到速度又有一次飞跃，只花了 7s. 提高了3倍! 在这里我加大了 innodb_log_file_size 到 512MB 但是结果且不满意，多次测试时间大概是7-8s左右 并没有显著提高.
 
@@ -182,17 +172,14 @@ Finished at: 2013-09-23 16:31:22.692315
 
 Innodb有一个很重要的参数就是 innodb_buffer_pool_size, 它缓存了索引和数据在内存里面，默认大小是128MB. 我增加到1GB试试.
 
-```
-innodb_buffer_pool_size=2G
-```
+    innodb_buffer_pool_size=2G
 
 不过测试下来结果且不满意，如下:
 
-```
-Start Running at: 2013-09-23 17:06:41.078170 
-Start Consume with name: Thread-1.
-Finished at: 2013-09-23 17:06:48.263859 
-```
+	Start Running at: 2013-09-23 17:06:41.078170
+	Start Consume with name: Thread-1.
+	Finished at: 2013-09-23 17:06:48.263859
+
 性能并没有提高;查看了下 innodb status 发现buffer pool还很充足: 
 
 Free buffers       107963
