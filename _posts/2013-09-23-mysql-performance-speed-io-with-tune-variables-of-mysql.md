@@ -79,10 +79,8 @@ Clone下来后，复制default.config.ini 命名为config.ini 然后输入对应
 
 重要参数:
 
-```
-consume: 并发用户个数
-count: 每个consume产生的SQL个数
-```
+    consume: 并发用户个数
+    count: 每个consume产生的SQL个数
 
 这个脚本还没有开源，入手也比较难，如果有问题可以随时找我. 然后测试的表也是innodb,后面的优化都是基于innodb引擎.
 
@@ -100,9 +98,9 @@ count: 10000 (1万个插入SQL)
 ```
 测试结果:
 
-	Start Running at: 2013-09-23 15:14:39.606895
-	Start Consume with name: Thread-1.
-	Finished at: 2013-09-23 15:25:20.730606
+    Start Running at: 2013-09-23 15:14:39.606895
+    Start Consume with name: Thread-1.
+    Finished at: 2013-09-23 15:25:20.730606
 
 可以看到一个用户执行1万个插入SQL,竟然需要15mins 41s (忽略毫秒). 这个是一个很严重的性能问题；我们现在要想优化它就要明白MySQL和Innodb做了哪些磁盘IO操作然后通过配置来减少IO操作.
 
@@ -165,26 +163,48 @@ count: 10000 (1万个插入SQL)
     Start Consume with name: Thread-1.
     Finished at: 2013-09-23 16:31:22.692315
 
-可以看到速度又有一次飞跃，只花了 7s. 提高了3倍! 在这里我加大了 innodb_log_file_size 到 512MB 但是结果且不满意，多次测试时间大概是7-8s左右 并没有显著提高.
+可以看到速度又有一次飞跃，只花了 7s. 提高了3倍! 在这里我加大了 innodb_log_file_size 到 512MB 但是测试下来发现并没有提高性能（多次测试时间大概是7-8s左右 并没有提高），我猜测原因是我的事务不多，100M左右的日志文件应该足够了。 
 
 ***
 数据写优化
 
 Innodb有一个很重要的参数就是 innodb_buffer_pool_size, 它缓存了索引和数据在内存里面，默认大小是128MB. 我增加到1GB试试.
 
-    innodb_buffer_pool_size=2G
+    innodb_buffer_pool_size=1G
 
 不过测试下来结果且不满意，如下:
 
-	Start Running at: 2013-09-23 17:06:41.078170
-	Start Consume with name: Thread-1.
-	Finished at: 2013-09-23 17:06:48.263859
+    Start Running at: 2013-09-23 17:06:41.078170
+    Start Consume with name: Thread-1.
+    Finished at: 2013-09-23 17:06:48.263859
 
 性能并没有提高;查看了下 innodb status 发现buffer pool还很充足: 
 
-Free buffers       107963
+    Free buffers: 107963
 
+这里我猜测innodb_buffer_pool_size已经满足了需求，增太大也没有意义。不过MySQL官方文档强调，这个变量对innodb引擎性能影响非常大，可以有效减少IO.
 
-
+继续尝试，仔细思考下， 1W个insert操作都不并发请求，所以和MySQL应该不会创建
+    
 
 ## 总结
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
