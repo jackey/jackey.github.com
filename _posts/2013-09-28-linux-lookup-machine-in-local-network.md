@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Linux系统运维--查询局域网内机器IP
+title: Linux系统运维--使用bash查询本地局域网所有主机
 description: 在Linux下面经常会想知道局域网内有哪些机器，并且想查询这些机器的IP.这篇文章通过一段小脚本帮助完成这项工作.
 tags: [Linux, 局域网机器查询，ping, bash获得本机IP地址]
 ---
