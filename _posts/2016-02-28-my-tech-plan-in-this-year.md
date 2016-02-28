@@ -1,15 +1,15 @@
 ---
 layout: default
-title: 我的今年技术计划
+title: 2016个人技术计划
 description: 技术在进步 人也需要进步； 在这里列出今年2016年需要学习的最新技术
 tags: [Web开发, docker, golang, 技术学习]
 ---
 
-#技术面对对象
+# 技术面对对象
 
 主要面向互联网方面的技术研发，比如LAMP / LNMP 技术架构, Mongodb / Redis 等NoSQL技术存储, Golang / Node.js 等新时代的技术研发体系
 
-##需要学习和研究的技术
+## 需要学习和研究的技术
 
 * docker
 
